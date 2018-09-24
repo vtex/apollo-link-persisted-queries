@@ -1,3 +1,7 @@
+## Fork motivation
+
+We forked this project in order to solve a memory leak in the original project. See [this issue in original repo](https://github.com/apollographql/apollo-link-persisted-queries/issues/26) for context.
+
 Automatic Persisted Queries
 ---
 
