@@ -22,6 +22,10 @@ namespace PersistedQueryLink {
     generateHash?: (document: DocumentNode) => string;
     disable?: (error: ErrorResponse) => boolean;
     useGETForHashedQueries?: boolean;
+    hashCache?: {
+      get(query: DocumentNode): string | undefined;
+      set(query: DocumentNode, hash: string): void;
+    };
   };
 }
 
@@ -71,14 +75,14 @@ function operationIsQuery(operation: Operation) {
 export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options = {},
 ) => {
-  const { generateHash, disable, useGETForHashedQueries } = Object.assign(
-    {},
-    defaultOptions,
-    options,
-  );
+  const {
+    generateHash,
+    disable,
+    useGETForHashedQueries,
+    hashCache = new Map<DocumentNode, string>(),
+  } = Object.assign({}, defaultOptions, options);
   let supportsPersistedQueries = true;
 
-  const calculated: Map<DocumentNode, string> = new Map();
   return new ApolloLink((operation, forward) => {
     if (!forward) {
       throw new Error(
@@ -90,13 +94,18 @@ export const createPersistedQueryLink = (
 
     let hashError: any;
     if (supportsPersistedQueries) {
-      let hash = calculated.get(query);
-      if (!hash) {
-        try {
-          hash = generateHash(query);
-          calculated.set(query, hash);
-        } catch (e) {
-          hashError = e;
+      let hash: string | undefined;
+      if (!hashCache) {
+        hash = generateHash(query);
+      } else {
+        hash = hashCache.get(query);
+        if (!hash) {
+          try {
+            hash = generateHash(query);
+            hashCache.set(query, hash);
+          } catch (e) {
+            hashError = e;
+          }
         }
       }
 
