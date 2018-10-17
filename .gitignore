@@ -47,7 +47,7 @@ jspm_packages
 .yarn-integrity
 
 # Compiled
-dist
-lib
+# dist
+# lib
 
 .idea
